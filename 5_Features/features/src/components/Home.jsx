@@ -2,6 +2,13 @@ import React from 'react'
 import { useState,useEffect } from 'react'
 import {FaArrowAltCircleUp} from 'react-icons/fa'
 import {FaArrowAltCircleDown} from 'react-icons/fa'
+import ProductList from './ProductList'
+import Categories from './Categories'
+import basicOps from './Utilities/basicOps'
+
+import { MdKeyboardArrowLeft } from "react-icons/md";
+import { MdKeyboardArrowRight } from "react-icons/md";
+import { usePaginationContext } from './contexts/PaginationContexts'
 
 function Home() {
 
@@ -11,24 +18,12 @@ function Home() {
     const [categories,setCategories]=useState([])
     const [currentCategory,setCurrentCategory]=useState("All Categories")
 
+    const {pageNum,pageSize,
+      setPageNum,setPageSize
+    } = usePaginationContext()
 
-    function inComparater(product1,product2){
-      if (product1.price > product2.price){
-        return 1
-      }
-      else{
-        return -1
-      }
-    }
 
-    function decComparater(product1,product2){
-      if (product1.price < product2.price){
-        return 1
-      }
-      else{
-        return -1
-      }
-    }
+    
 
     useEffect(()=>{
         (async function (){
@@ -39,31 +34,7 @@ function Home() {
         ()
     },[])
 
-    
 
-    let filteredArr=productData;
-    if (filteredArr != null){
-      filteredArr=filteredArr.filter((elem)=>{
-      let lowerSearchTerm=searchTerm.toLowerCase();
-      
-      let lowerTitle=elem.title.toLowerCase()
-      return lowerTitle.includes(lowerSearchTerm)
-    })
-
-    }
-
-    let filteredSortedArr=filteredArr;
-
-    if (sortDir != 0){
-      if (sortDir == 1) {
-        filteredSortedArr.sort(inComparater)
-      }
-      else{
-        filteredSortedArr.sort(decComparater)
-      }
-    }
-
-    
     useEffect(()=>{
       (async function(){
         const resp=await fetch(`https://fakestoreapi.com/products/categories`);
@@ -74,61 +45,66 @@ function Home() {
     },[])
 
 
-    let filteredCategoryData=filteredArr
-
-    if (currentCategory !== "All Categories"){
-      filteredCategoryData=filteredCategoryData.filter((product)=>{
-        return product.category == currentCategory
-      })
-    }
     
+  let object=basicOps(productData,searchTerm,sortDir,currentCategory,pageNum,pageSize) 
+  let filteredCategoryData=object.filteredCategoryData
+  let totalPages=object.totalPages
     
   return (
     <>
     <header className="nav_wrapper">
         <input className="search_input" type="text"
         value={searchTerm}
-        onChange={(e)=>{setSearchTerm(e.target.value)}}
+        onChange={(e)=>{setSearchTerm(e.target.value)
+          setPageNum(1);
+        }}
         />
         <div className="icon-container">
-          <FaArrowAltCircleUp style={{color:"white"}} onClick={()=>{setSortDir(1)}}/>
-          <FaArrowAltCircleDown style={{color:"white"}} onClick={()=>{setSortDir(-1)}}/>
+          <FaArrowAltCircleUp style={{color:"white"}} onClick={()=>{setSortDir(1) 
+            setPageNum(1)}}/>
+          <FaArrowAltCircleDown style={{color:"white"}} onClick={()=>{setSortDir(-1)
+            setPageNum(1)
+          }}/>
         </div>
         
     </header>
     <div className="categories_wrapper">
-      <button className="category-button">All Categories</button>
-      {categories.map((category)=>{
-        return (<button className="category-button" 
-          onClick={()=>
-            {setCurrentCategory(category)
-              
-
-          }}>
-            {category}</button>)
-        
-      })}
+      <Categories categories={categories} setCurrentCategory={setCurrentCategory} ></Categories>
           
     </div>
 
 
 
     <main className="main-container">
-       {filteredCategoryData == null ? <h3>Loading....</h3>:filteredCategoryData.map((product)=>{
-        return (
-          
-          <div className="div-container">
-            <img src={product.image} className='img-style' alt="product_img"/>
-            <div className="card-container">
-              <p className="title">{product.title}</p>
-              <br></br>
-              <p className="price">{product.price}</p>
-            </div>
-          </div>
-         
-        )
-       })}
+       <ProductList productList={filteredCategoryData}></ProductList>
     </main>
+
+    {/*Pagination*/}
+
+    <div className='pagination'>
+      <button onClick={()=>{
+        if (pageNum == 1){
+          return 
+        
+        }
+        setPageNum((pageNum)=>pageNum-1)
+        
+      }} 
+    disabled={pageNum == 1 ? true : false}
+      ><MdKeyboardArrowLeft></MdKeyboardArrowLeft></button>
+      <div className="page-num">
+        {pageNum}
+      </div>
+      <button onClick={()=>{
+        if (pageNum == totalPages){
+          return 
+        }
+        setPageNum((pageNum)=>pageNum+1)
+      }}
+      disabled={pageNum == totalPages ? true : false}
+      ><MdKeyboardArrowRight></MdKeyboardArrowRight></button>
+
+    </div>
     </>
   )
 }

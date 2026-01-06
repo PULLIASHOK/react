@@ -131,3 +131,23 @@
   align-items: center;
   
 }
+
+.pagination{
+  display: flex;
+  height: 3rem;
+  margin-top: 1rem;
+  justify-content: center;
+  align-items: center;
+}
+
+.page-num{
+  padding: 0.3rem;
+  font-size: 1.3rem;
+
+}
+
+.navbar{
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+}
